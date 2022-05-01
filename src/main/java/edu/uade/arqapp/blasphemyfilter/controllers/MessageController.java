@@ -1,6 +1,9 @@
 package edu.uade.arqapp.blasphemyfilter.controllers;
 
-import edu.uade.arqapp.blasphemyfilter.domain.MessageRequest;
+import edu.uade.arqapp.blasphemyfilter.domain.Message;
+import edu.uade.arqapp.blasphemyfilter.service.FilterService;
+
+import com.google.gson.Gson;
 
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,13 +17,21 @@ public class MessageController {
     
     private KafkaTemplate<String, String> kafkaTemplate;
 
+    private Gson g = new Gson();
+
+    private FilterService filter = new FilterService();
+
     public MessageController(KafkaTemplate<String, String> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 
     @PostMapping
-    public void publish(@RequestBody MessageRequest request) {
-        kafkaTemplate.send("output", request.message());
+    public void publish(@RequestBody Message request) {
+        kafkaTemplate.send("spring-logs", "Triggered endpoint with message: " + g.toJson(request));
+        System.out.println("Triggered endpoint with message: " + g.toJson(request));
+        String response = g.toJson(filter.filteringMsg(request));
+
+        kafkaTemplate.send("output", response);
     }
 
 }
