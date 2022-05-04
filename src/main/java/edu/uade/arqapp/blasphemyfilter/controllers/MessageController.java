@@ -19,8 +19,6 @@ public class MessageController {
 
     private Gson g = new Gson();
 
-    private FilterService filter = new FilterService();
-
     public MessageController(KafkaTemplate<String, String> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
@@ -29,9 +27,14 @@ public class MessageController {
     public void publish(@RequestBody Message request) {
         kafkaTemplate.send("spring-logs", "Triggered endpoint with message: " + g.toJson(request));
         System.out.println("Triggered endpoint with message: " + g.toJson(request));
-        String response = g.toJson(filter.filteringMsg(request));
 
-        kafkaTemplate.send("output", response);
+        Message message = new Message(request.getUserId(), FilterService.getCensoredText(request.getMessage()));
+
+        String response = g.toJson(message);
+
+        System.out.println(response);
+
+        // kafkaTemplate.send("output", response);
     }
 
 }
